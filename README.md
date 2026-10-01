@@ -1,5 +1,5 @@
-# S2-FIFO<M>
-Artifacts for S2-FIFO<M>
+# S2-FIFO\<M>
+Artifacts for S2-FIFO\<M>
 
 ## Plots
 
