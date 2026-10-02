@@ -57,25 +57,34 @@ S2-FIFO+ variants. The code is in the branch `btw27` of
 - `cachelib/allocator/`: the S2-FIFO+ variants as CacheLib eviction policies
 - `benchmark/`: the multi-threaded benchmark and the script that runs the sweep
 
-To run the benchmark, build CacheLib and the benchmark, and start the sweep:
+To run the benchmark, install the OS packages once, then build the dependencies, CacheLib, and the
+benchmark with `setup.sh`, and start the sweep (Ubuntu 20.04 shown):
 
 ```bash
-cd CacheLib
-./contrib/build.sh -j                  # dependencies into opt/cachelib, CacheLib into build-cachelib
-cd build-cachelib && cmake -DCMAKE_BUILD_TYPE=Release . && make -j && cd ..
+git clone -b btw27 https://github.com/SajadKarim/CacheLib.git && cd CacheLib
+
+sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test    # g++ 11 on Ubuntu 20.04; not needed on 22.04
+sudo apt-get install -y g++-11 git curl numactl time python3 python3-numpy
+./contrib/prerequisites-ubuntu18.sh                       # OS packages of the CacheLib dependencies (uses sudo)
 
 cd benchmark
-cmake -S . -B _build -DCMAKE_BUILD_TYPE=Release && cmake --build _build -j
-mkdir -p results
-nohup setsid ./run_all.sh > results/nohup.out 2>&1 &     # full sweep, about 50 hours
+./setup.sh                                                # dependencies at fixed revisions, CacheLib, and the benchmark; about an hour
+nohup setsid ./run_all.sh > results.nohup.out 2>&1 &      # full sweep, 400 runs, about 18 hours
 ```
 
-When the sweep has finished, `benchmark/results/cachelib_results.csv` contains all runs. Copy it into
-`Plots/` of this repository and run `python3 RQ3Plot.py` to draw the RQ3 figure.
+`setup.sh` fetches the CacheLib dependencies (folly, fbthrift, and others) at the revisions the results
+were produced with and builds everything with g++ 11; `contrib/build.sh` alone does not work on this
+branch. `run_all.sh` generates the Zipf traces (2.4 GB each) before the sweep if they are missing, with
+the trace generator of libCacheSim, which it downloads; the traces are not part of either repository.
+Both scripts can be run again after an interruption and continue where they stopped.
 
-`benchmark/README.md` describes the requirements (a machine with at least two NUMA nodes and the
-trace generator of libCacheSim), the settings in `run_all.sh` to adjust for a new machine, smaller
-sweeps, the policies, and the result files.
+When the sweep has finished, `benchmark/results/cachelib_results.csv` contains all runs (Zipf skews 0.6,
+0.8, 0.9, and 1.0, 1 to 16 threads, two cache sizes). Copy it into `Plots/` of this repository and run
+`python3 RQ3Plot.py` to draw the RQ3 figure.
+
+`benchmark/README.md` describes the requirements (a machine with at least two NUMA nodes and about
+100 GB of free memory on one of them), the dependency revisions, the build steps that `setup.sh` runs,
+smaller sweeps, the policies, and the result files.
 
 ## Availability
 
